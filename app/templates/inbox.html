@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mailbox Reader</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+            background: #f4f6f8;
+            color: #222;
+        }
+
+        h1 {
+            color: #174ea6;
+        }
+
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px #0001;
+        }
+
+        .email {
+            border-bottom: 1px solid #ddd;
+            padding: 14px 0;
+            overflow-wrap: anywhere;
+        }
+
+        .email:last-child {
+            border-bottom: none;
+        }
+
+        .muted {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .error {
+            color: #b42318;
+            background: #fef3f2;
+            padding: 12px;
+            border-radius: 6px;
+            overflow-wrap: anywhere;
+        }
+
+        .refresh {
+            display: inline-block;
+            background: #174ea6;
+            color: white;
+            text-decoration: none;
+            padding: 10px 16px;
+            border-radius: 5px;
+        }
+
+        .email-body {
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Mailbox Reader</h1>
+    <p>Lectura de correos mediante Microsoft Graph.</p>
+
+    <section class="panel">
+        <h2>Bandeja de entrada</h2>
+
+        <p class="muted">
+            Se muestran los mensajes más recientes de Outlook.
+        </p>
+
+        <a class="refresh" href="/">Actualizar bandeja</a>
+
+        {% if error %}
+        <p class="error">
+            No se pudieron cargar los correos: {{ error }}
+        </p>
+
+        {% elif emails %}
+        {% for email in emails %}
+        <article class="email">
+            <strong>{{ email.subject or "(Sin asunto)" }}</strong>
+
+            <p>
+                De:
+                {% set sender = email.get("from") or email.get("sender") %}
+                {% set address_data = sender.get("emailAddress", {}) if sender else {} %}
+
+                {% if address_data %}
+                {{ address_data.get("name") or address_data.get("address") or "Remitente desconocido" }}
+                {% if address_data.get("name") and address_data.get("address") %}
+                ({{ address_data.get("address") }})
+                {% endif %}
+                {% else %}
+                Remitente desconocido
+                {% endif %}
+            </p>
+
+            <p class="email-body">{{ (email.get("body") or {}).get("content") or email.get("bodyPreview") or "Sin contenido" }}</p>
+
+            <p class="muted">
+                Recibido:
+                {{ email.receivedDateTime or "Fecha no disponible" }}
+            </p>
+        </article>
+        {% endfor %}
+
+        {% else %}
+        <p>No se encontraron mensajes en la bandeja de entrada.</p>
+        {% endif %}
+    </section>
+</body>
+
+</html>
